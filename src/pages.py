@@ -5,6 +5,8 @@ from kivy.uix.scrollview import ScrollView
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.label import MDLabel
 
+import data
+
 
 # Main content area for the home page, which includes a search bar and a list of climbs.
 # Each climb in the list is represented by a ThreeLineRightIconListItem, which includes the climb name, setter, and repeat count.
@@ -17,19 +19,22 @@ class HomeLayout(BoxLayout):
         # Create seach bar
         self.add_widget(TextInput(size_hint_y=0.075, hint_text="Search"))
 
-        # Create placeholder list of climbs
+        # Create list of climbs
         scroll = ScrollView()
         climb_list = MDList()
 
-        # Populate the climb list with placeholder climbs
+        # Populate the climb list with climbs
         for i in range(20):
+            # Get climb data from the database
+            climb_data = data.getClimbList("./data/tensiondata")
+
             item = ThreeLineRightIconListItem(
-                text=f"Climb {i + 1}",
-                secondary_text="Set by picklechungus",
-                tertiary_text="1 repeat",
+                text=climb_data[i][0],  # Climb name
+                secondary_text=f"Set by {climb_data[i][1]}",  # Setter name
+                tertiary_text=f"{climb_data[i][2]} repeats",  # Repeat count
             )
             # Add the custom right container to each list item
-            item.add_widget(RightVerticalContainer())
+            item.add_widget(GradeContainer().getGrade(climb_data[i][3]))  # Climb grade
             climb_list.add_widget(item)
 
         # Add the climb list to the scroll view and then add the scroll view to the layout
@@ -38,11 +43,11 @@ class HomeLayout(BoxLayout):
 
 
 # Custom container for the right side of each climb list item, which includes the climb's grade and a placeholder for more info icons (has instagram beta, benchmark/classic)
-class RightVerticalContainer(IRightBodyTouch, MDBoxLayout):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+class GradeContainer(IRightBodyTouch, MDBoxLayout):
+    def getGrade(self, grade):
         self.orientation = "vertical"
         self.size_hint_x = None
 
-        self.add_widget(MDLabel(text="8A/V11", halign="left"))
-        self.add_widget(MDLabel(text="█,█", halign="left"))
+        self.add_widget(MDLabel(text=str(grade), halign="left"))
+
+        return self

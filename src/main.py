@@ -32,3 +32,7 @@ class BoaredApp(MDApp):
 
 if __name__ == "__main__":
     BoaredApp().run()
+
+
+# ideas:
+# average user grade
