@@ -2,7 +2,7 @@ from kivymd.app import MDApp
 from kivy.uix.boxlayout import BoxLayout
 from kivy.core.window import Window
 
-from menus import UpperMenu, LowerMenu
+from menus import LowerMenu
 from pages import HomeLayout
 
 Window.size = (540, 960)
@@ -15,14 +15,19 @@ class BoaredLayout(BoxLayout):
         super().__init__(**kwargs)
         self.orientation = "vertical"
 
-        # Create the upper menu
-        self.add_widget(UpperMenu())
-
         # Create the main content area
-        self.add_widget(HomeLayout())
+        self.add_widget(HomeLayout(), index=1)
 
         # Create the lower menu
-        self.add_widget(LowerMenu())
+        self.add_widget(LowerMenu(), index=0)
+
+    # Function to switch between different pages in the main content area
+    def show_page(self, page):
+        # Remove the current page if it exists
+        if len(self.children) > 0:
+            self.remove_widget(self.children[1])
+        # Add the new page to the layout
+        self.add_widget(page, index=1)
 
 
 class BoaredApp(MDApp):
@@ -32,7 +37,3 @@ class BoaredApp(MDApp):
 
 if __name__ == "__main__":
     BoaredApp().run()
-
-
-# ideas:
-# average user grade

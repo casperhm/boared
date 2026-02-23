@@ -1,6 +1,10 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.dropdown import DropDown
+from kivy.uix.textinput import TextInput
+from kivy.app import App
+
+import pages
 
 
 # Upper menu with board switch, angle change, reset filters, and create climb buttons
@@ -9,6 +13,7 @@ class UpperMenu(BoxLayout):
         super().__init__(**kwargs)
         self.orientation = "horizontal"
         self.size_hint_y = 0.1
+        self.size_hint_x = 1
 
         # Board switch dropdown
         self.board_dropdown = DropDown()
@@ -51,3 +56,23 @@ class LowerMenu(BoxLayout):
 
         # Profile button
         self.add_widget(Button(text="Profile", size_hint_x=0.33))
+
+
+class SearchBar(BoxLayout):
+    def createSearchBar(self):
+        self.orientation = "horizontal"
+        self.size_hint_y = 0.075
+
+        # Create seach bar
+        self.add_widget(TextInput(size_hint_x=0.85, hint_text="Search"))
+
+        # Create filter button
+        self.add_widget(
+            Button(text="Filter", size_hint_x=0.15, on_release=self.openFilter)
+        )
+
+        return self
+
+    def openFilter(self, *args):
+        # Open the filter page when the filter button is pressed
+        App.get_running_app().root.show_page(pages.FilterPage())
