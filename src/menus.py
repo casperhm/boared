@@ -30,12 +30,12 @@ class UpperMenu(BoxLayout):
             self.board_dropdown.add_widget(btn)
 
         # Main button to open the dropdown
-        mainbutton = Button(text="Select Board", size_hint_x=0.6)
-        mainbutton.bind(on_release=self.board_dropdown.open)
+        board_button = Button(text="Select Board", size_hint_x=0.6)
+        board_button.bind(on_release=self.board_dropdown.open)
         self.board_dropdown.bind(
-            on_select=lambda instance, x: setattr(mainbutton, "text", x)
+            on_select=lambda instance, x: setattr(board_button, "text", x)
         )
-        self.add_widget(mainbutton)
+        self.add_widget(board_button)
 
         # Angle change button
         self.add_widget(Button(text="Angle Change", size_hint_x=0.1))

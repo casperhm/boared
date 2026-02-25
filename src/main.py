@@ -14,12 +14,15 @@ class BoaredLayout(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        # Search filters
+        self.filters = []
+
         # Store last visited page
         self.last_page = None
         self.orientation = "vertical"
 
         # Create the main content area
-        self.add_widget(pages.HomeLayout(), index=1)
+        self.add_widget(pages.HomePage(), index=1)
 
         # Create the lower menu
         self.add_widget(menus.LowerMenu(), index=0)

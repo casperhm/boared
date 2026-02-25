@@ -5,7 +5,8 @@ from kivymd.uix.label import MDLabel
 
 
 # Just TB2 40 degrees data for now, currently capped at one 50 item page
-def get_climb_list(db_path, filters):
+# one arg for each filter
+def get_climb_list(db_path, *args):
     # Get the data from database file
     try:
         with sqlite3.connect(db_path) as connection:
