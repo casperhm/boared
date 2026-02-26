@@ -16,10 +16,12 @@ import menus
 # Each climb in the list is represented by a ThreeLineRightIconListItem, which includes the climb name, setter, and repeat count.
 # The right side of each list item includes a custom container RightVerticalContainer.
 class HomePage(BoxLayout):
-    def __init__(self, **kwargs):
+    def __init__(self, filters, **kwargs):
         super().__init__(**kwargs)
         self.orientation = "vertical"
         self.size_hint_y = 0.9
+        self.filters = filters
+        self.name = "home_page"
 
         # Create the upper menu
         self.add_widget(menus.UpperMenu())
@@ -31,7 +33,7 @@ class HomePage(BoxLayout):
         scroll = ScrollView()
 
         # Add the climb list to the scroll view and then add the scroll view to the layout
-        scroll.add_widget(data.get_climb_list("./data/tensiondata"))
+        scroll.add_widget(data.get_climb_list("./data/tensiondata", self.filters))
         self.add_widget(scroll)
 
 
@@ -40,6 +42,7 @@ class FilterPage(BoxLayout):
         super().__init__(**kwargs)
         self.size_hint_y = 0.9
         self.orientation = "vertical"
+        self.name = "filter_page"
 
         # Add upper menu
         self.add_widget(menus.UpperMenu())
@@ -85,9 +88,8 @@ class FilterPage(BoxLayout):
             "Unsent",
             "Beta video",
         ]:
-            # Set initial button color on menu open - TODO fix bug where on REENTERING the filter menu using the FILTER button the first filter will be grey -
-            # still in root.filters but grey. this does not happen when reentering the filter menu through the back button
-            if btn.text in App.get_running_app().root.filters:
+            # Set initial button color on menu open
+            if filter_option in App.get_running_app().root.filters:
                 color = (0, 1, 0, 1)
             else:
                 color = (1, 1, 1, 1)
@@ -97,7 +99,11 @@ class FilterPage(BoxLayout):
                 height=44,
                 background_color=color,
             )
-            btn.bind(on_release=lambda btn: self.add_filter(btn))
+            btn.bind(
+                on_release=lambda instance, option=filter_option: self.add_filter(
+                    instance
+                )
+            )
             filter_layout.add_widget(btn)
 
         self.add_widget(filter_layout)

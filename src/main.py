@@ -22,7 +22,7 @@ class BoaredLayout(BoxLayout):
         self.orientation = "vertical"
 
         # Create the main content area
-        self.add_widget(pages.HomePage(), index=1)
+        self.add_widget(pages.HomePage(filters=self.filters), index=1)
 
         # Create the lower menu
         self.add_widget(menus.LowerMenu(), index=0)

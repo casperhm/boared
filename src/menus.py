@@ -6,6 +6,7 @@ from kivy.app import App
 
 import pages
 import main
+import data
 
 
 # Upper menu with back, board switch, angle change, reset filters, and create climb buttons
@@ -50,6 +51,12 @@ class UpperMenu(BoxLayout):
         root = App.get_running_app().root
         if getattr(root, "last_page", None):
             root.show_page(root.last_page)
+            # Refresh climb list if returning from filters TODO only refresh if filters changed
+            if root.last_page.name == "filter_page":
+                root.children[1].children[0].clear_widgets()
+                root.children[1].children[0].add_widget(
+                    data.get_climb_list("./data/tensiondata", root.filters)
+                )
 
 
 # Lower menu with menu, home, and profile buttons
