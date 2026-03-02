@@ -1,4 +1,4 @@
-#!/home/picklechungus/Desktop/boared.0/kivy_venv/bin/python3
+#!/home/picklechungus/Desktop/boared/kivy_venv/bin/python
 
 import sys
 import argparse

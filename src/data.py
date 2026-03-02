@@ -28,6 +28,9 @@ def get_climb_list(db_path, filters):
     # Add additional filters
     if "Benchmark" in filters:
         query_addons.append("AND s.benchmark_difficulty NOTNULL")
+
+    if "No match" in filters:
+        query_addons.append("AND c.is_nomatch = 1")
     if "Beta video" in filters:
         # This checks if the climb's UUID exists in the beta_links table
         query_addons.append("""
@@ -88,21 +91,21 @@ class ListRightContainer(IRightBodyTouch, MDBoxLayout):
                 )
             )
 
-        # Instagram beta
-        if climb[6] == 1:  # uuid found in beta_links
-            icon_container.add_widget(
-                Image(
-                    source="./data/icons/instagram.png",
-                    size_hint=(None, None),
-                    size=("20dp", "20dp"),
-                )
-            )
-
         # Match / No match
         if climb[7] == 1:
             icon_container.add_widget(
                 Image(
                     source="./data/icons/no_match.png",
+                    size_hint=(None, None),
+                    size=("20dp", "20dp"),
+                )
+            )
+
+        # Instagram beta
+        if climb[6] == 1:  # uuid found in beta_links
+            icon_container.add_widget(
+                Image(
+                    source="./data/icons/instagram.png",
                     size_hint=(None, None),
                     size=("20dp", "20dp"),
                 )

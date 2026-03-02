@@ -6,10 +6,38 @@ from kivy.uix.button import Button
 from kivy.uix.dropdown import DropDown
 from kivy.app import App
 from kivy.core.window import Window
-
+from kivymd.uix.slider import MDSlider
+from kivymd.uix.floatlayout import MDFloatLayout
+from kivymd.app import MDApp
+from kivymd.uix.floatlayout import MDFloatLayout
+from kivymd.uix.slider import MDSlider
+from kivy.graphics import Color, Rectangle
+from kivy.metrics import dp
+from kivy.lang import Builder
 
 import data
 import menus
+
+
+# KV = """
+# <MDSliderHandle>:
+#     # 1. Standard elevation removal
+#     elevation: 0
+
+#     # 2. Force shadow colors to fully transparent
+#     shadow_color: 0, 0, 0, 0
+#     shadow_soft_color: 0, 0, 0, 0
+#     shadow_hard_color: 0, 0, 0, 0
+
+#     # 3. Remove the blur/softness entirely
+#     shadow_softness: 0
+
+#     # 4. Remove the "halo" glow when touched
+#     state_layer_size: 0
+
+#     """
+
+# Builder.load_string(KV)
 
 
 # Main content area for the home page, which includes a search bar and a list of climbs.
@@ -38,14 +66,21 @@ class HomePage(BoxLayout):
 
 
 class FilterPage(BoxLayout):
-    def __init__(self, **kwargs):
+    def __init__(self, filters, **kwargs):
         super().__init__(**kwargs)
         self.size_hint_y = 0.9
         self.orientation = "vertical"
         self.name = "filter_page"
+        self.filters = filters
 
         # Add upper menu
         self.add_widget(menus.UpperMenu())
+
+        # Add double slider layout (two sliders on the same position)
+        grade_slider = RangeSlider(
+            size_hint_x=1,
+        )
+        self.add_widget(grade_slider)
 
         # "Sort by" dropdown
         self.sort_dropdown = DropDown()
@@ -80,16 +115,18 @@ class FilterPage(BoxLayout):
         filter_layout.size_hint_x = 0.8
         filter_layout.pos_hint = {"right": 0.9}
 
-        # Populate the filter layout with default filter options
+        # Populate the filter layout with default filter options TODO maybe? benchmark filter shows only benchmarks,
+        # but when not selected benchmarks can still appear. might change
         for filter_option in [
             "Benchmark",
+            "No match",
             "In my ascents",
             "Not in my ascents",
             "Unsent",
             "Beta video",
         ]:
             # Set initial button color on menu open
-            if filter_option in App.get_running_app().root.filters:
+            if filter_option in self.filters:
                 color = (0, 1, 0, 1)
             else:
                 color = (1, 1, 1, 1)
@@ -119,3 +156,59 @@ class FilterPage(BoxLayout):
             root.filters.remove(filter.text)
             filter.background_color = (1, 1, 1, 1)
         print(root.filters)
+
+
+class RangeSlider(MDFloatLayout):
+    def on_kv_post(self, base_widget):
+        # This prevents one slider from 'stealing' touches meant for the other
+        self.ids.slider_min.on_touch_down = self.filter_touch_min
+        self.ids.slider_max.on_touch_down = self.filter_touch_max
+
+        # Bind logic
+        self.ids.slider_min.bind(value=self.update_min)
+        self.ids.slider_max.bind(value=self.update_max)
+
+        # Create rectangle highlight
+        with self.canvas.after:
+            Color(0, 1, 0, 1)
+            self.highlight = Rectangle()
+
+        # Update rect when sliders move or window resizes
+        self.bind(pos=self.update_rect, size=self.update_rect)
+        self.ids.slider_min.bind(value_pos=self.update_rect)
+        self.ids.slider_max.bind(value_pos=self.update_rect)
+
+    def filter_touch_min(self, touch):
+        # If the touch is closer to the MAX handle, ignore it here
+        if abs(touch.x - self.ids.slider_max.value_pos[0]) < abs(
+            touch.x - self.ids.slider_min.value_pos[0]
+        ):
+            return False  # Let the touch pass to slider_max
+        return MDSlider.on_touch_down(self.ids.slider_min, touch)
+
+    def filter_touch_max(self, touch):
+        # If the touch is closer to the MIN handle, ignore it here
+        if abs(touch.x - self.ids.slider_min.value_pos[0]) < abs(
+            touch.x - self.ids.slider_max.value_pos[0]
+        ):
+            return False  # Let the touch pass to slider_min
+        return MDSlider.on_touch_down(self.ids.slider_max, touch)
+
+    def update_min(self, instance, value):
+        if value > self.ids.slider_max.value:
+            self.ids.slider_min.value = self.ids.slider_max.value
+
+    def update_max(self, instance, value):
+        if value < self.ids.slider_min.value:
+            self.ids.slider_max.value = self.ids.slider_min.value
+
+    def update_rect(self, *args):
+        # Manually calculate the highlighted bar position
+        self.highlight.pos = (
+            self.x + (self.ids.slider_min.value_pos[0] - dp(8)),
+            self.center_y - dp(4),
+        )
+        self.highlight.size = (
+            self.ids.slider_max.value_pos[0] - self.ids.slider_min.value_pos[0],
+            dp(4),
+        )

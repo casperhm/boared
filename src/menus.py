@@ -47,7 +47,7 @@ class UpperMenu(BoxLayout):
         # Create climb button
         self.add_widget(Button(text="Create Climb", size_hint_x=0.1))
 
-    def go_back(*a):
+    def go_back(self, *args):
         root = App.get_running_app().root
         if getattr(root, "last_page", None):
             root.show_page(root.last_page)
@@ -93,4 +93,5 @@ class SearchBar(BoxLayout):
 
     def openFilter(self, *args):
         # Open the filter page when the filter button is pressed
-        App.get_running_app().root.show_page(pages.FilterPage())
+        root = App.get_running_app().root
+        root.show_page(pages.FilterPage(filters=root.filters))
