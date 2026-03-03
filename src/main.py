@@ -2,7 +2,6 @@ from kivymd.app import MDApp
 from kivy.uix.boxlayout import BoxLayout
 from kivy.core.window import Window
 from kivy.lang import Builder
-import kivymd
 
 
 import menus

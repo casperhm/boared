@@ -5,7 +5,6 @@ from kivy.uix.textinput import TextInput
 from kivy.app import App
 
 import pages
-import main
 import data
 
 
@@ -47,8 +46,10 @@ class UpperMenu(BoxLayout):
         # Create climb button
         self.add_widget(Button(text="Create Climb", size_hint_x=0.1))
 
+    # Return to the previous page, and refresh the climb list (if coming from filter page)
     def go_back(self, *args):
         root = App.get_running_app().root
+        print(root.filters)
         if getattr(root, "last_page", None):
             root.show_page(root.last_page)
             # Refresh climb list if returning from filters TODO only refresh if filters changed
@@ -76,6 +77,7 @@ class LowerMenu(BoxLayout):
         self.add_widget(Button(text="Profile", size_hint_x=0.33))
 
 
+# Contains a searchbar which TODO as of now does nothing, and a button to open the filters page
 class SearchBar(BoxLayout):
     def createSearchBar(self):
         self.orientation = "horizontal"

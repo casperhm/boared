@@ -113,6 +113,7 @@ class ListRightContainer(IRightBodyTouch, MDBoxLayout):
         self.add_widget(icon_container)
 
 
+# Conversion from the global grade averages (between font v and the other one) too font/v boulder grades
 GRADE_MAP = {
     1: "1a/V0",
     2: "1b/V0",
