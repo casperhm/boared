@@ -11,23 +11,25 @@
         id: slider_min
         size_hint_x: 1
         min: 0
-        max: 17
+        max: 0
         value: 0
         hint: True
         pos_hint: {"center_y": .5}
         step: 1
         thumb_color_inactive: 0, 1, 0, 1
         thumb_color_active: 0, 1, 0, 1
+        show_off: False
         elevation: 0
         ripple_scale: 0
+        hint: False
 
     # Define the second slider
     MDSlider:
         id: slider_max
         size_hint_x: 1
         min: 0
-        max: 17
-        value: 17
+        max: 0
+        value: 0
         hint: True
         pos_hint: {"center_y": .5}
         step: 1
@@ -38,3 +40,4 @@
         thumb_color_active: 0, 1, 0, 1
         elevation: 0
         ripple_scale: 0
+        hint: False

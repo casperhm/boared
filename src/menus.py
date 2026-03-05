@@ -56,7 +56,9 @@ class UpperMenu(BoxLayout):
             if root.last_page.name == "filter_page":
                 root.children[1].children[0].clear_widgets()
                 root.children[1].children[0].add_widget(
-                    data.get_climb_list("./data/tensiondata", root.filters)
+                    data.get_climb_list(
+                        "./data/tensiondata", root.filters, root.sort_by
+                    )
                 )
 
 
@@ -96,4 +98,4 @@ class SearchBar(BoxLayout):
     def openFilter(self, *args):
         # Open the filter page when the filter button is pressed
         root = App.get_running_app().root
-        root.show_page(pages.FilterPage(filters=root.filters))
+        root.show_page(pages.FilterPage(filters=root.filters, sort_by=root.sort_by))

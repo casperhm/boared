@@ -7,7 +7,18 @@ from kivy.uix.image import Image
 
 # Just TB2 40 degrees data for now, currently capped at one 50 item page
 # one arg for each filter
-def get_climb_list(db_path, filters):
+def get_climb_list(db_path, filters, sort_by):
+    # Default grade filters
+    grade_min = str(MOON16_GRADE_RANGE[0])
+    grade_max = str(MOON16_GRADE_RANGE[1])
+
+    # Get custom grade filters
+    for f in filters:
+        if "grade_min=" in f:
+            grade_min = f.removeprefix("grade_min=")
+        elif "grade_max=" in f:
+            grade_max = f.removeprefix("grade_max=")
+
     # Base query (temporary fixed params for TB2 @40)
     query_base = """
         SELECT c.name, 
@@ -20,9 +31,10 @@ def get_climb_list(db_path, filters):
             c.is_nomatch
         FROM climbs c
         JOIN climb_stats s ON c.uuid = s.climb_uuid
-        WHERE c.layout_id = ? AND c.angle = ? AND s.angle = ?
+        WHERE c.layout_id = ? AND c.angle = ? AND s.angle = ? AND s.display_difficulty >= ? AND s.display_difficulty <= ?
     """
-    params = ["11", "40", "40"]
+    # board layout, angle, angle, grade_min, grade_max, sort_by
+    params = ["11", "40", "40", grade_min, grade_max]
     query_addons = []
 
     # Add additional filters
@@ -40,7 +52,7 @@ def get_climb_list(db_path, filters):
         """)
 
     # final query
-    final_query = f"{query_base} {' '.join(query_addons)} LIMIT 50"
+    final_query = f"{query_base} {' '.join(query_addons)} ORDER BY {sort_by} LIMIT 50"
 
     # Get the data from database file
     try:
@@ -155,6 +167,9 @@ GRADE_MAP = {
     38: "9c/V21",
     39: "9c+/V22",
 }
+
+# Easiest and hardest climb for each board
+MOON16_GRADE_RANGE = (19, 31)
 
 
 # Returns the Font/V-scale string for a given difficulty integer

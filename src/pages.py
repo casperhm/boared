@@ -8,6 +8,7 @@ from kivymd.uix.slider import MDSlider
 from kivymd.uix.floatlayout import MDFloatLayout
 from kivy.graphics import Color, Rectangle
 from kivy.metrics import dp
+from kivymd.uix.label import MDLabel
 
 import data
 import menus
@@ -17,11 +18,12 @@ import menus
 # Each climb in the list is represented by a ThreeLineRightIconListItem, which includes the climb name, setter, and repeat count.
 # The right side of each list item includes a custom container RightVerticalContainer.
 class HomePage(BoxLayout):
-    def __init__(self, filters, **kwargs):
+    def __init__(self, filters, sort_by, **kwargs):
         super().__init__(**kwargs)
         self.orientation = "vertical"
         self.size_hint_y = 0.9
         self.filters = filters
+        self.sort_by = sort_by
         self.name = "home_page"
 
         # Create the upper menu
@@ -34,19 +36,22 @@ class HomePage(BoxLayout):
         scroll = ScrollView()
 
         # Add the climb list to the scroll view and then add the scroll view to the layout
-        scroll.add_widget(data.get_climb_list("./data/tensiondata", self.filters))
+        scroll.add_widget(
+            data.get_climb_list("./data/tensiondata", self.filters, self.sort_by)
+        )
         self.add_widget(scroll)
 
 
 # Content area containing a grade slider, a sort by dropdown, and toggleable filter buttons
 # Also has the same upper menu as HomePage
 class FilterPage(BoxLayout):
-    def __init__(self, filters, **kwargs):
+    def __init__(self, filters, sort_by, **kwargs):
         super().__init__(**kwargs)
         self.size_hint_y = 0.9
         self.orientation = "vertical"
         self.name = "filter_page"
         self.filters = filters
+        self.sort_by = sort_by
 
         # Add upper menu
         self.add_widget(menus.UpperMenu())
@@ -72,12 +77,15 @@ class FilterPage(BoxLayout):
             self.sort_dropdown.add_widget(btn)
 
         # Main button to open the dropdown
-        sort_button = Button(text="Sort by", size_hint_x=0.6)
+        # Get english sort name from sql query type
+        sort = [k for k, v in SORT_OPTIONS.items() if v == sort_by]
+        sort_button = Button(
+            text=f"Sort by {sort[0].lower()}",
+            size_hint_x=0.6,
+        )
         sort_button.bind(on_release=self.sort_dropdown.open)
         self.sort_dropdown.bind(
-            on_select=lambda instance, x: setattr(
-                sort_button, "text", "Sort by " + x.lower()
-            )
+            on_select=lambda instance, x: update_sort_option(self, sort_button, x)
         )
         # Set button size
         sort_button.size_hint = (1, 0.1)
@@ -122,9 +130,21 @@ class FilterPage(BoxLayout):
 # Two MDSliders stacked on top of each other with a rectanglular highlight drawn between them
 # Contains logic to manage touch between the overlapping sliders and prevent them from crossing over each other,
 # as well as resize the highlight rectangle according to the min and max thumb values
+# Also contains text above the slider to show the current min and max
 class RangeSlider(MDFloatLayout):
+    # def __init__(self, **kwargs):
+    #     super().__init__(**kwargs)
+
     # Wait until all kv rules have been applied to the widget before proceeding
     def on_kv_post(self, base_widget):
+        # Set slider min and max to grade_min and grade_max
+        self.ids.slider_min.min = data.MOON16_GRADE_RANGE[0]
+        self.ids.slider_min.max = data.MOON16_GRADE_RANGE[1]
+        self.ids.slider_min.value = data.MOON16_GRADE_RANGE[0]
+        self.ids.slider_max.min = data.MOON16_GRADE_RANGE[0]
+        self.ids.slider_max.max = data.MOON16_GRADE_RANGE[1]
+        self.ids.slider_max.value = data.MOON16_GRADE_RANGE[1]
+
         # This prevents one slider from 'stealing' touches meant for the other
         self.ids.slider_min.on_touch_down = self.filter_touch_min
         self.ids.slider_max.on_touch_down = self.filter_touch_max
@@ -143,8 +163,19 @@ class RangeSlider(MDFloatLayout):
         self.ids.slider_min.bind(value_pos=self.update_rect)
         self.ids.slider_max.bind(value_pos=self.update_rect)
 
+        # Add text above the slider
+        self.range_label = MDLabel(
+            text=f"Grade {data.get_grade_string(self.ids.slider_min.value)} - {data.get_grade_string(self.ids.slider_max.value)}",
+            pos_hint={"x": 0.03, "y": 0.3},
+        )
+        self.add_widget(self.range_label)
+
         # Set thumb values according to filters
         self.set_initial_values()
+
+    # Add label above the slider
+    def update_range_label(self):
+        self.range_label.text = f"Grade {data.get_grade_string(self.ids.slider_min.value)} - {data.get_grade_string(self.ids.slider_max.value)}"
 
     # Set thumb values according to filters
     def set_initial_values(self):
@@ -193,14 +224,18 @@ class RangeSlider(MDFloatLayout):
         if value > self.ids.slider_max.value:
             self.ids.slider_min.value = self.ids.slider_max.value
         # Update grade filter
-        update_grade_filters(self, f"grade_min= {self.ids.slider_min.value}")
+        update_grade_filters(self, f"grade_min={self.ids.slider_min.value}")
+        # Update range label
+        self.update_range_label()
 
     # Prevent the max thumb from crossing the min thumb
     def update_max(self, instance, value):
         if value < self.ids.slider_min.value:
             self.ids.slider_max.value = self.ids.slider_min.value
         # Update grade filter
-        update_grade_filters(self, f"grade_max= {self.ids.slider_max.value}")
+        update_grade_filters(self, f"grade_max={self.ids.slider_max.value}")
+        # Update range label
+        self.update_range_label()
 
     # Adjust the size of the highlight in between the thumbs
     def update_rect(self, *args):
@@ -244,3 +279,25 @@ def update_grade_filters(self, filter):
 
     # Add new grade filter
     root.filters.append(filter)
+
+
+def update_sort_option(self, sort_button, sort_option):
+    root = App.get_running_app().root
+
+    # Update sort button text
+    setattr(sort_button, "text", "Sort by " + sort_option.lower())
+
+    # Add sort to root
+    root.sort_by = SORT_OPTIONS.get(sort_option)
+
+
+# Conversion from the english sort options to the sql table names
+SORT_OPTIONS = {
+    "Most repeats": "s.ascensionist_count DESC",
+    "Least repeats": "s.ascensionist_count ASC",
+    "Highest grade": "s.display_difficulty DESC",
+    "Lowest grade": "s.display_difficulty ASC",
+    "Oldest": "c.created_at DESC",
+    "Newest": "c.created_at ASC",
+    "Random": "RANDOM()",
+}
